@@ -47,6 +47,8 @@ char     stateTopicName[128];
 
 void setup () {
   pinMode (DIGITALPIN, INPUT_PULLUP);
+  pinMode (LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 
   strcat(hostname, "MRT-Power-Meter-");
   strcat(hostname, String(ESP.getChipId()).c_str());
@@ -97,7 +99,7 @@ void setup () {
 }
 
 void publish() {
-
+  digitalWrite(LED_BUILTIN, LOW);
   if(!mqttClient.isConnected()) {
     if(!mqttClient.reconnect()) {
       if(DEBUG)
@@ -118,6 +120,7 @@ void publish() {
       USE_SERIAL.println();   
     }
   }
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 /**
@@ -128,9 +131,10 @@ void publish() {
  *  1   rotations/minute == 800 watts
  *  general:
  *  power in watts = 3.600.000 / (75 * seconds for 1 rotation)
+ * power in watts = 3.600.000.000 / (75 * milliseconds for 1 rotation)
  **/
 float getPowerInWatts(uint16_t seconds_for_rotation) {
-  float _result = (float) 3600000 / (connectionManager.config.rotations_per_kwh * seconds_for_rotation);
+  float _result = (float) 3600000000 / (connectionManager.config.rotations_per_kwh * seconds_for_rotation);
   return (_result);
 }
 
@@ -142,7 +146,7 @@ float getEnergyInKwhPerImpulse() {
 void loop () {
   ntpTime.loop();
   
-  uint32_t timestamp = ntpTime.getTimestamp();
+  uint32_t timestamp = millis();// ntpTime.getTimestamp();
   uint8_t day_of_the_week = ntpTime.getWeekday();
   char date[11];
   ntpTime.getDateAsString(date);
